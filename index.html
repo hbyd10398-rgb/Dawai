@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>دوائي ما يضيع</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f3f7f6;--card:#fff;--ink:#16302b;--mute:#5d7570;--line:#d5e2df;--brand:#0f6b5c;--ok:#1d7a4d;--warn:#b86a00;--bad:#b3261e;--okbg:#e3f4ea;--warnbg:#fdf0d9;--badbg:#fbe4e2}
+@media (prefers-color-scheme:dark){:root{--bg:#0f1a18;--card:#17262a;--ink:#e6f1ee;--mute:#9bb3ad;--line:#2a403b;--brand:#4fc3ad;--ok:#6fd49b;--warn:#f0b24d;--bad:#ff8a80;--okbg:#17362a;--warnbg:#3a2c12;--badbg:#3d1c19}}
+*{box-sizing:border-box}
+body{margin:0;font-family:'Tajawal',system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.6}
+.wrap{max-width:560px;margin:0 auto;padding:16px}
+h1{font-size:1.7rem;font-weight:800;margin:8px 0 4px;color:var(--brand)}
+h2{font-size:1.1rem;margin:0 0 12px}
+.sub{color:var(--mute);margin:0 0 16px}
+.box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:16px}
+label{display:block;font-weight:500;margin:10px 0 4px}
+input,textarea{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:11px 12px}
+input:focus,textarea:focus,button:focus-visible{outline:2px solid var(--brand);outline-offset:1px}
+button{font:inherit;font-weight:700;border:0;border-radius:10px;padding:12px 16px;cursor:pointer;background:var(--brand);color:#fff;width:100%;margin-top:14px}
+button.ghost{background:transparent;color:var(--brand);border:1px solid var(--line);width:auto;margin:0;padding:6px 12px}
+button.link{background:none;color:var(--brand);margin-top:8px;font-weight:500;text-decoration:underline}
+.top{display:flex;justify-content:space-between;align-items:center}
+.err{color:var(--bad);min-height:1.4em;margin:8px 0 0;font-size:.95rem}
+.med{display:flex;gap:12px;align-items:flex-start;border-inline-start:6px solid var(--ok);padding-inline-start:12px;margin-bottom:12px}
+.med.warn{border-color:var(--warn)}.med.bad{border-color:var(--bad)}
+.med .info{flex:1}
+.med b{font-size:1.05rem}
+.med small{color:var(--mute);display:block}
+.tag{display:inline-block;border-radius:999px;padding:1px 10px;font-size:.85rem;font-weight:700;margin-top:4px;background:var(--okbg);color:var(--ok)}
+.warn .tag{background:var(--warnbg);color:var(--warn)}.bad .tag{background:var(--badbg);color:var(--bad)}
+.empty{color:var(--mute);text-align:center;padding:20px 0}
+.hide{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<section id="authView" class="hide">
+  <h1>دوائي ما يضيع</h1>
+  <p class="sub">سجّل أدويتك وتابع تواريخ انتهاء صلاحيتها.</p>
+  <div class="box">
+    <h2 id="authTitle">تسجيل الدخول</h2>
+    <label for="email">البريد الإلكتروني</label>
+    <input id="email" type="email" dir="ltr" autocomplete="email">
+    <label for="pass">كلمة المرور</label>
+    <input id="pass" type="password" dir="ltr" autocomplete="current-password">
+    <p class="err" id="authErr"></p>
+    <button id="authBtn">دخول</button>
+    <button class="link" id="switchBtn">ليس لديك حساب؟ أنشئ حساباً</button>
+  </div>
+</section>
+
+<section id="appView" class="hide">
+  <div class="top">
+    <h1>أدويتي</h1>
+    <button class="ghost" id="logoutBtn">خروج</button>
+  </div>
+  <div class="box">
+    <h2>إضافة دواء</h2>
+    <label for="name">اسم الدواء</label>
+    <input id="name">
+    <label for="company">الشركة المصنّعة</label>
+    <input id="company">
+    <label for="expiry">تاريخ انتهاء الصلاحية</label>
+    <input id="expiry" type="date" dir="ltr">
+    <label for="notes">ملاحظات (اختياري)</label>
+    <textarea id="notes" rows="2"></textarea>
+    <p class="err" id="addErr"></p>
+    <button id="addBtn">حفظ الدواء</button>
+  </div>
+  <div class="box">
+    <h2>قائمة الأدوية</h2>
+    <div id="list"><p class="empty">لا توجد أدوية بعد. أضف أول دواء من النموذج أعلاه.</p></div>
+  </div>
+</section>
+
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDF8_Q8aUVeRAVZ5ZSAN65mH-Dxal6I-I4",
+  authDomain: "drug-expiry-5d573.firebaseapp.com",
+  projectId: "drug-expiry-5d573",
+  storageBucket: "drug-expiry-5d573.firebasestorage.app",
+  messagingSenderId: "644152535840",
+  appId: "1:644152535840:web:358f7012fc395ac3d04545"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const $ = id => document.getElementById(id);
+
+let registerMode = false, unsub = null;
+
+const errors = {
+  "auth/invalid-email":"البريد الإلكتروني غير صحيح.",
+  "auth/missing-password":"اكتب كلمة المرور.",
+  "auth/weak-password":"كلمة المرور ضعيفة، استخدم 6 أحرف على الأقل.",
+  "auth/email-already-in-use":"هذا البريد مسجّل مسبقاً، سجّل الدخول بدلاً من ذلك.",
+  "auth/invalid-credential":"البريد أو كلمة المرور غير صحيحة.",
+  "auth/network-request-failed":"تعذّر الاتصال بالإنترنت."
+};
+
+$("switchBtn").onclick = () => {
+  registerMode = !registerMode;
+  $("authTitle").textContent = registerMode ? "إنشاء حساب" : "تسجيل الدخول";
+  $("authBtn").textContent = registerMode ? "إنشاء الحساب" : "دخول";
+  $("switchBtn").textContent = registerMode ? "لديك حساب؟ سجّل الدخول" : "ليس لديك حساب؟ أنشئ حساباً";
+  $("authErr").textContent = "";
+};
+
+$("authBtn").onclick = async () => {
+  $("authErr").textContent = "";
+  const email = $("email").value.trim(), pass = $("pass").value;
+  try {
+    if (registerMode) await createUserWithEmailAndPassword(auth, email, pass);
+    else await signInWithEmailAndPassword(auth, email, pass);
+  } catch (e) {
+    $("authErr").textContent = errors[e.code] || "حدث خطأ: " + e.code;
+  }
+};
+
+$("logoutBtn").onclick = () => signOut(auth);
+
+onAuthStateChanged(auth, user => {
+  if (unsub) { unsub(); unsub = null; }
+  $("authView").classList.toggle("hide", !!user);
+  $("appView").classList.toggle("hide", !user);
+  if (!user) return;
+  const q = query(collection(db, "users", user.uid, "medicines"), orderBy("expiry"));
+  unsub = onSnapshot(q, snap => render(user.uid, snap.docs), e => {
+    $("list").innerHTML = '<p class="empty">تعذّر تحميل الأدوية. تأكد من قواعد الأمان.</p>';
+  });
+});
+
+$("addBtn").onclick = async () => {
+  $("addErr").textContent = "";
+  const user = auth.currentUser;
+  const name = $("name").value.trim(), company = $("company").value.trim(), expiry = $("expiry").value;
+  if (!name || !expiry) { $("addErr").textContent = "اسم الدواء وتاريخ الانتهاء مطلوبان."; return; }
+  try {
+    await addDoc(collection(db, "users", user.uid, "medicines"), {
+      name, company, expiry, notes: $("notes").value.trim(), createdAt: serverTimestamp()
+    });
+    ["name","company","expiry","notes"].forEach(i => $(i).value = "");
+  } catch (e) {
+    $("addErr").textContent = "تعذّر الحفظ: " + e.code;
+  }
+};
+
+function daysLeft(expiry) {
+  const t = new Date(); t.setHours(0,0,0,0);
+  return Math.round((new Date(expiry + "T00:00:00") - t) / 86400000);
+}
+
+function esc(s) {
+  return String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+
+function render(uid, docs) {
+  const list = $("list");
+  if (!docs.length) { list.innerHTML = '<p class="empty">لا توجد أدوية بعد. أضف أول دواء من النموذج أعلاه.</p>'; return; }
+  list.innerHTML = docs.map(d => {
+    const m = d.data(), n = daysLeft(m.expiry);
+    const cls = n < 0 ? "bad" : n <= 30 ? "warn" : "";
+    const label = n < 0 ? `منتهي منذ ${-n} يوم` : n === 0 ? "ينتهي اليوم" : `باقٍ ${n} يوم`;
+    return `<div class="med ${cls}">
+      <div class="info">
+        <b>${esc(m.name)}</b>
+        <small>${esc(m.company)}</small>
+        <small dir="ltr" style="text-align:right">${esc(m.expiry)}</small>
+        ${m.notes ? `<small>${esc(m.notes)}</small>` : ""}
+        <span class="tag">${label}</span>
+      </div>
+      <button class="ghost" data-id="${d.id}">حذف</button>
+    </div>`;
+  }).join("");
+  list.querySelectorAll("button[data-id]").forEach(b => b.onclick = async () => {
+    if (confirm("حذف هذا الدواء؟")) await deleteDoc(doc(db, "users", uid, "medicines", b.dataset.id));
+  });
+}
+</script>
+</body>
+</html>
