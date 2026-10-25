@@ -21,16 +21,18 @@ h2{font-size:1.25rem;font-weight:800;margin:0 0 10px}
 .nav button{background:transparent;color:var(--ink);margin:0;padding:12px 8px;font-weight:500}
 .nav button.on{background:var(--brand);color:#fff;font-weight:700}
 label{display:block;font-weight:500;margin:12px 0 4px}
-input,textarea{width:100%;font:inherit;color:var(--ink);background:#fdfcf8;border:1px solid var(--line);border-radius:14px;padding:12px}
-input:focus,textarea:focus,button:focus-visible{outline:2px solid var(--brand);outline-offset:1px}
+input,textarea,select{width:100%;font:inherit;color:var(--ink);background:#fdfcf8;border:1px solid var(--line);border-radius:14px;padding:12px}
+input:focus,textarea:focus,select:focus,button:focus-visible{outline:2px solid var(--brand);outline-offset:1px}
 button{font:inherit;font-weight:700;border:0;border-radius:16px;padding:14px 16px;cursor:pointer;background:var(--brand);color:#fff;width:100%;margin-top:14px}
 button.soft{background:var(--pale);color:var(--brand)}
 button.ghost{background:transparent;color:var(--brand);border:1px solid var(--line);width:auto;margin:0;padding:6px 12px}
 button.link{background:none;color:var(--brand);font-weight:500;text-decoration:underline}
-.row{display:flex;gap:10px}.row button{margin-top:0}
+.row{display:flex;gap:10px;align-items:center}
+.row>*{min-width:0}.row input,.row select{flex:1}
+.row button{margin-top:0;flex:1}.row .fit{flex:0 0 auto;width:auto;white-space:nowrap}
 .stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0}
-.st{border-radius:22px;padding:16px;min-height:120px;display:flex;flex-direction:column;justify-content:space-between;border:1px solid var(--line)}
-.st b{font-size:2.2rem;line-height:1}
+button.st{border-radius:22px;padding:16px;min-height:120px;margin:0;width:auto;display:flex;flex-direction:column;justify-content:space-between;align-items:stretch;text-align:start;border:1px solid var(--line)}
+.st span{font-weight:500}.st b{font-size:2.2rem;line-height:1}
 .s1{background:#eef6f0;color:#1a6a4d}.s2{background:#fdf6e3;color:#8a5a00}.s3{background:#fdf1f0;color:#a33128}.s4{background:#eef5f8;color:#2d5a6b}
 .err{color:#b3261e;min-height:1.4em;margin:8px 0 0}
 .med{display:flex;gap:12px;align-items:flex-start;border-inline-start:6px solid #1d7a4d;padding:4px 12px 4px 0;margin-bottom:14px}
@@ -40,7 +42,13 @@ button.link{background:none;color:var(--brand);font-weight:500;text-decoration:u
 .warn .tag{background:#fdf0d9;color:#8a5a00}.bad .tag{background:#fbe4e2;color:#b3261e}
 .empty{color:var(--mute);text-align:center;padding:22px;border:1.5px dashed var(--line);border-radius:16px}
 .note{background:#fdf6e3;color:#8a5a00;border-radius:16px;padding:12px;margin-top:10px}
-.hide{display:none}
+.quick{background:var(--pale);border-radius:18px;padding:14px;margin-bottom:6px}
+button.chip{width:auto;margin:4px 0 0 6px;padding:6px 12px;background:#fff;color:var(--ink);border:1px solid var(--line);font-weight:500;border-radius:999px}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center;z-index:20}
+.sheet{background:var(--card);width:100%;max-width:560px;max-height:85vh;overflow:auto;border-radius:22px 22px 0 0;padding:18px}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+video{width:100%;border-radius:14px;background:#000;max-height:50vh}
+.hide{display:none!important}
 </style>
 </head>
 <body>
@@ -63,7 +71,7 @@ button.link{background:none;color:var(--brand);font-weight:500;text-decoration:u
 
 <section id="appView" class="hide">
   <div class="box">
-    <div class="logo"><div class="pill">💊</div><div><h1>دوائي ما يضيع</h1></div></div>
+    <div class="logo"><div class="pill">💊</div><h1>دوائي ما يضيع</h1></div>
     <p class="sub">إدارة الأدوية والكميات وتواريخ الصلاحية في مكان واحد.</p>
     <div class="nav" id="nav">
       <button data-go="home" class="on">الرئيسية</button>
@@ -79,12 +87,12 @@ button.link{background:none;color:var(--brand);font-weight:500;text-decoration:u
 
   <section id="s-home">
     <h2>نظرة على مخزونك</h2>
-    <p class="sub">الأرقام محسوبة من سجلاتك الفعلية.</p>
+    <p class="sub">اضغط على أي مربع لعرض قائمته.</p>
     <div class="stats">
-      <div class="st s1"><span>الإجمالي</span><b id="n1">0</b></div>
-      <div class="st s2"><span>قريبة من الانتهاء</span><b id="n2">0</b></div>
-      <div class="st s4"><span>إجمالي الكميات</span><b id="n4">0</b></div>
-      <div class="st s3"><span>منتهية الصلاحية</span><b id="n3">0</b></div>
+      <button class="st s1" data-stat="all"><span>الإجمالي</span><b id="n1">0</b></button>
+      <button class="st s2" data-stat="soon"><span>قريبة من الانتهاء</span><b id="n2">0</b></button>
+      <button class="st s4" data-stat="qty"><span>إجمالي الكميات</span><b id="n4">0</b></button>
+      <button class="st s3" data-stat="exp"><span>منتهية الصلاحية</span><b id="n3">0</b></button>
     </div>
     <div class="row">
       <button data-go="add">إضافة دواء</button>
@@ -97,8 +105,29 @@ button.link{background:none;color:var(--brand);font-weight:500;text-decoration:u
 
   <section id="s-add" class="hide"><div class="box">
     <h2>إضافة دواء</h2>
+    <div class="quick">
+      <b>تعبئة سريعة</b>
+      <div class="row" style="margin-top:10px">
+        <input id="barcode" dir="ltr" inputmode="numeric" placeholder="رقم الباركود">
+        <button class="soft fit" id="scanBtn" style="background:#fff">📷 مسح</button>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <select id="ocrLang"><option value="eng">عبوة إنجليزية</option><option value="eng+ara">عربية + إنجليزية</option></select>
+        <button class="fit" id="photoBtn">📸 تصوير وقراءة</button>
+      </div>
+      <input id="photo" type="file" accept="image/*" capture="environment" class="hide">
+      <p class="sub" id="ocrMsg"></p>
+      <div id="ocrBox" class="hide">
+        <div class="row" style="margin:8px 0"><span>ضع السطر المختار في:</span>
+          <select id="chipTarget"><option value="name">اسم الدواء</option><option value="company">الشركة</option></select></div>
+        <div id="chips"></div>
+      </div>
+      <p class="sub" id="quickMsg"></p>
+    </div>
     <label for="name">اسم الدواء</label><input id="name">
     <label for="company">الشركة المصنّعة</label><input id="company">
+    <label for="form">شكل الدواء</label>
+    <select id="form"><option value="">اختر الشكل</option><option>حبوب</option><option>كبسولة</option><option>شراب</option><option>حقنة</option><option>قطرة</option><option>كريم / مرهم</option><option>لبوس</option><option>بخاخ</option><option>أخرى</option></select>
     <label for="qty">الكمية</label><input id="qty" type="number" min="1" value="1" dir="ltr">
     <label for="expiry">تاريخ انتهاء الصلاحية</label><input id="expiry" type="date" dir="ltr">
     <label for="notes">ملاحظات (اختياري)</label><textarea id="notes" rows="2"></textarea>
@@ -108,35 +137,35 @@ button.link{background:none;color:var(--brand);font-weight:500;text-decoration:u
 
   <section id="s-soon" class="hide"><div class="box"><h2>قريبة من الانتهاء</h2><p class="sub">تنتهي خلال 30 يوماً.</p><div id="lSoon"></div></div></section>
   <section id="s-expired" class="hide"><div class="box"><h2>منتهية الصلاحية</h2><div id="lExp"></div></div></section>
-
-  <section id="s-search" class="hide"><div class="box">
-    <h2>البحث</h2>
-    <input id="q" placeholder="اكتب اسم الدواء أو الشركة">
-    <div id="lSearch" style="margin-top:14px"></div>
-  </div></section>
-
-  <section id="s-alerts" class="hide"><div class="box">
-    <h2>إشعارات صلاحية الأدوية</h2>
-    <p class="sub">الأدوية التي تحتاج انتباهاً، حسب سجلاتك المحفوظة.</p>
+  <section id="s-search" class="hide"><div class="box"><h2>البحث</h2>
+    <input id="q" placeholder="اكتب اسم الدواء أو الشركة"><div id="lSearch" style="margin-top:14px"></div></div></section>
+  <section id="s-alerts" class="hide"><div class="box"><h2>التنبيهات</h2>
     <div class="note">إشعارات الهاتف غير مفعّلة في هذا الإصدار. راجع هذا القسم دورياً.</div>
-    <div id="lAlerts" style="margin-top:14px"></div>
-  </div></section>
-
-  <section id="s-help" class="hide"><div class="box">
-    <h2>الإعدادات والمساعدة</h2>
+    <div id="lAlerts" style="margin-top:14px"></div></div></section>
+  <section id="s-help" class="hide"><div class="box"><h2>الإعدادات والمساعدة</h2>
     <p class="sub">الحساب: <span id="who" dir="ltr"></span></p>
-    <p>الأخضر: صلاحية جيدة. البرتقالي: ينتهي خلال 30 يوماً. الأحمر: منتهي الصلاحية.</p>
-    <p>لا تعتمد على التطبيق وحده في القرارات الطبية، وراجع الصيدلي أو الطبيب عند الشك في دواء.</p>
-    <button class="soft" id="logoutBtn">تسجيل الخروج</button>
-  </div></section>
+    <p>الأخضر: صلاحية جيدة. البرتقالي: ينتهي خلال 30 يوماً. الأحمر: منتهي.</p>
+    <p>راجع الصيدلي أو الطبيب عند الشك في أي دواء.</p>
+    <button class="soft" id="logoutBtn">تسجيل الخروج</button></div></section>
 </section>
-
 </div>
+
+<div id="listModal" class="modal hide"><div class="sheet">
+  <div class="top"><h2 id="lmTitle" style="margin:0"></h2><button class="ghost" id="lmClose">إغلاق</button></div>
+  <div id="lmBody"></div>
+</div></div>
+
+<div id="scanModal" class="modal hide"><div class="sheet">
+  <h2>مسح الباركود</h2>
+  <video id="vid" playsinline muted></video>
+  <p class="sub" id="scanMsg"></p>
+  <button class="soft" id="scanClose">إغلاق</button>
+</div></div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, addDoc, deleteDoc, doc, setDoc, getDoc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const app = initializeApp({
   apiKey: "AIzaSyDF8_Q8aUVeRAVZ5ZSAN65mH-Dxal6I-I4",
@@ -148,7 +177,7 @@ const app = initializeApp({
 });
 const auth = getAuth(app), db = getFirestore(app);
 const $ = id => document.getElementById(id);
-let registerMode = false, unsub = null, meds = [];
+let registerMode = false, unsub = null, meds = [], openKind = null;
 
 const errors = {
   "auth/invalid-email":"البريد الإلكتروني غير صحيح.",
@@ -159,23 +188,23 @@ const errors = {
   "auth/network-request-failed":"تعذّر الاتصال بالإنترنت."
 };
 
-/* التنقل بين الأقسام */
 function go(name) {
   document.querySelectorAll("#appView > section").forEach(s => s.classList.add("hide"));
   $("s-" + name).classList.remove("hide");
   document.querySelectorAll("#nav button").forEach(b => b.classList.toggle("on", b.dataset.go === name));
   window.scrollTo(0, 0);
 }
+
 document.addEventListener("click", async e => {
-  const g = e.target.closest("[data-go]");
-  if (g) go(g.dataset.go);
+  const g = e.target.closest("[data-go]"); if (g) go(g.dataset.go);
+  const s = e.target.closest("[data-stat]"); if (s) showList(s.dataset.stat);
+  const c = e.target.closest("[data-chip]"); if (c) $($("chipTarget").value).value = c.dataset.chip;
   const d = e.target.closest("[data-del]");
-  if (d && confirm("حذف هذا الدواء؟")) {
-    await deleteDoc(doc(db, "users", auth.currentUser.uid, "medicines", d.dataset.del));
-  }
+  if (d && confirm("حذف هذا الدواء؟")) await deleteDoc(doc(db, "users", auth.currentUser.uid, "medicines", d.dataset.del));
+  if (e.target.id === "listModal") closeList();
 });
 
-/* تسجيل الدخول */
+/* الدخول */
 $("switchBtn").onclick = () => {
   registerMode = !registerMode;
   $("authTitle").textContent = registerMode ? "إنشاء حساب" : "تسجيل الدخول";
@@ -185,8 +214,8 @@ $("switchBtn").onclick = () => {
 };
 $("authBtn").onclick = async () => {
   $("authErr").textContent = "";
-  const email = $("email").value.trim(), pass = $("pass").value;
   try {
+    const email = $("email").value.trim(), pass = $("pass").value;
     if (registerMode) await createUserWithEmailAndPassword(auth, email, pass);
     else await signInWithEmailAndPassword(auth, email, pass);
   } catch (e) { $("authErr").textContent = errors[e.code] || "حدث خطأ: " + e.code; }
@@ -200,66 +229,155 @@ onAuthStateChanged(auth, user => {
   if (!user) { meds = []; return; }
   $("who").textContent = user.email;
   go("home");
-  const q = query(collection(db, "users", user.uid, "medicines"), orderBy("expiry"));
-  unsub = onSnapshot(q, snap => {
+  unsub = onSnapshot(query(collection(db, "users", user.uid, "medicines"), orderBy("expiry")), snap => {
     meds = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     render();
-  }, () => {
-    $("lAll").innerHTML = '<p class="empty">تعذّر تحميل الأدوية. تأكد من قواعد الأمان.</p>';
-  });
+  }, () => { $("lAll").innerHTML = '<p class="empty">تعذّر تحميل الأدوية. تأكد من قواعد الأمان.</p>'; });
 });
 
-/* إضافة دواء */
+/* الحفظ */
 $("addBtn").onclick = async () => {
   $("addErr").textContent = "";
   const name = $("name").value.trim(), expiry = $("expiry").value;
   if (!name || !expiry) { $("addErr").textContent = "اسم الدواء وتاريخ الانتهاء مطلوبان."; return; }
+  const company = $("company").value.trim(), form = $("form").value, code = $("barcode").value.trim();
   try {
     await addDoc(collection(db, "users", auth.currentUser.uid, "medicines"), {
-      name, company: $("company").value.trim(), qty: Math.max(1, parseInt($("qty").value) || 1),
+      name, company, form, barcode: code, qty: Math.max(1, parseInt($("qty").value) || 1),
       expiry, notes: $("notes").value.trim(), createdAt: serverTimestamp()
     });
-    ["name","company","expiry","notes"].forEach(i => $(i).value = "");
-    $("qty").value = 1;
+    if (code) { try { await setDoc(doc(db, "barcodes", code), { name, company, form }); } catch {} }
+    ["name","company","form","barcode","expiry","notes"].forEach(i => $(i).value = "");
+    $("qty").value = 1; $("ocrMsg").textContent = ""; $("quickMsg").textContent = "";
+    $("ocrBox").classList.add("hide");
     go("meds");
   } catch (e) { $("addErr").textContent = "تعذّر الحفظ: " + e.code; }
 };
 
-/* العرض */
-const daysLeft = x => {
-  const t = new Date(); t.setHours(0,0,0,0);
-  return Math.round((new Date(x + "T00:00:00") - t) / 86400000);
+/* الباركود */
+let stream = null, timer = null;
+async function lookup(code) {
+  code = code.trim(); if (!code) return;
+  let f = meds.find(m => m.barcode === code);
+  if (!f) { try { const s = await getDoc(doc(db, "barcodes", code)); if (s.exists()) f = s.data(); } catch {} }
+  if (f) {
+    if (f.name) $("name").value = f.name;
+    if (f.company) $("company").value = f.company;
+    if (f.form) $("form").value = f.form;
+    $("quickMsg").textContent = "تم التعرف على الدواء: " + (f.name || "");
+  } else $("quickMsg").textContent = "باركود جديد. اكتب الاسم والشركة مرة واحدة وسيُحفظان للمرات القادمة.";
+}
+$("barcode").onchange = () => lookup($("barcode").value);
+$("scanBtn").onclick = async () => {
+  $("scanModal").classList.remove("hide");
+  if (!("BarcodeDetector" in window)) { $("scanMsg").textContent = "متصفحك لا يدعم قراءة الباركود. اكتب الرقم يدوياً."; return; }
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+    const v = $("vid"); v.srcObject = stream; await v.play();
+    const det = new BarcodeDetector();
+    $("scanMsg").textContent = "وجّه الكاميرا نحو الباركود...";
+    timer = setInterval(async () => {
+      try {
+        const r = await det.detect(v);
+        if (r.length) { const c = r[0].rawValue; stopScan(); $("barcode").value = c; lookup(c); }
+      } catch {}
+    }, 350);
+  } catch { $("scanMsg").textContent = "تعذّر فتح الكاميرا. اسمح للمتصفح باستخدامها."; }
 };
+function stopScan() {
+  clearInterval(timer);
+  if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+  $("scanModal").classList.add("hide");
+}
+$("scanClose").onclick = stopScan;
+
+/* تصوير العبوة وقراءتها */
+$("photoBtn").onclick = () => $("photo").click();
+const loadScript = src => new Promise((ok, no) => {
+  if (window.Tesseract) return ok();
+  const s = document.createElement("script"); s.src = src; s.onload = ok; s.onerror = no; document.head.appendChild(s);
+});
+async function shrink(file) {
+  const b = await createImageBitmap(file), k = Math.min(1, 1800 / Math.max(b.width, b.height));
+  const c = document.createElement("canvas"); c.width = b.width * k; c.height = b.height * k;
+  c.getContext("2d").drawImage(b, 0, 0, c.width, c.height); return c;
+}
+$("photo").onchange = async e => {
+  const file = e.target.files[0]; if (!file) return;
+  $("ocrMsg").textContent = "جارٍ تجهيز القارئ (أول مرة يحتاج تنزيلاً بسيطاً)...";
+  try {
+    await loadScript("https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js");
+    const img = await shrink(file);
+    const r = await Tesseract.recognize(img, $("ocrLang").value, {
+      logger: m => { if (m.status === "recognizing text") $("ocrMsg").textContent = "جارٍ قراءة الصورة... " + Math.round(m.progress * 100) + "%"; }
+    });
+    handleText(r.data.text);
+  } catch { $("ocrMsg").textContent = "تعذّرت القراءة. تأكد من الإنترنت وأعد المحاولة بصورة أوضح."; }
+  e.target.value = "";
+};
+function guessDate(t) {
+  let T = t.replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d)), out = [];
+  const Y = y => +(String(y).length == 2 ? "20" + y : y);
+  T = T.replace(/\b(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4}|\d{2})\b/g, (s, a, b, c) => { out.push([Y(c), +b, +a]); return " "; });
+  T = T.replace(/\b(\d{4})[\/\-.](\d{1,2})\b/g, (s, y, m) => { out.push([+y, +m, 0]); return " "; });
+  T = T.replace(/\b(\d{1,2})[\/\-.](\d{4})\b/g, (s, m, y) => { out.push([+y, +m, 0]); return " "; });
+  const M = "jan feb mar apr may jun jul aug sep oct nov dec".split(" ");
+  T.replace(/\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*[\s.\-\/]*(\d{4}|\d{2})\b/gi,
+    (s, m, y) => { out.push([Y(y), M.indexOf(m.toLowerCase()) + 1, 0]); return s; });
+  out = out.filter(([y, m]) => y >= 2000 && y <= 2100 && m >= 1 && m <= 12);
+  if (!out.length) return "";
+  out.sort((a, b) => a[0] - b[0] || a[1] - b[1] || a[2] - b[2]);
+  const [y, m, d] = out[out.length - 1];
+  return `${y}-${String(m).padStart(2, "0")}-${String(d || new Date(y, m, 0).getDate()).padStart(2, "0")}`;
+}
+function handleText(t) {
+  const d = guessDate(t); if (d) $("expiry").value = d;
+  const lines = [...new Set(t.split("\n").map(s => s.replace(/[^\w\u0600-\u06FF .\-+%\/]/g, "").trim()).filter(s => s.length >= 3))].slice(0, 14);
+  $("chips").innerHTML = lines.map(s => `<button class="chip" dir="auto" data-chip="${esc(s)}">${esc(s)}</button>`).join("");
+  $("ocrBox").classList.toggle("hide", !lines.length);
+  $("ocrMsg").textContent = (d ? "وجدت تاريخ الانتهاء ووضعته في الحقل، راجعه. " : "لم أجد تاريخاً واضحاً. ") + "اضغط على السطر الصحيح للاسم والشركة.";
+}
+
+/* العرض */
+const daysLeft = x => { const t = new Date(); t.setHours(0,0,0,0); return Math.round((new Date(x + "T00:00:00") - t) / 86400000); };
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 
 function card(m) {
-  const n = daysLeft(m.expiry);
-  const cls = n < 0 ? "bad" : n <= 30 ? "warn" : "";
+  const n = daysLeft(m.expiry), cls = n < 0 ? "bad" : n <= 30 ? "warn" : "";
   const label = n < 0 ? `منتهي منذ ${-n} يوم` : n === 0 ? "ينتهي اليوم" : `باقٍ ${n} يوم`;
+  const meta = [m.form, m.company].filter(Boolean).join(" · ");
   return `<div class="med ${cls}"><div class="info">
     <b>${esc(m.name)}</b>
-    <small>${esc(m.company)}${m.company ? " · " : ""}الكمية: ${m.qty || 1}</small>
+    <small>${esc(meta)}${meta ? " · " : ""}الكمية: ${m.qty || 1}</small>
     <small dir="ltr" style="text-align:right">${esc(m.expiry)}</small>
     ${m.notes ? `<small>${esc(m.notes)}</small>` : ""}
     <span class="tag">${label}</span></div>
     <button class="ghost" data-del="${m.id}">حذف</button></div>`;
 }
 const fill = (id, arr, msg) => $(id).innerHTML = arr.length ? arr.map(card).join("") : `<p class="empty">${msg}</p>`;
-
-function render() {
+const lists = () => {
   const exp = meds.filter(m => daysLeft(m.expiry) < 0);
   const soon = meds.filter(m => { const n = daysLeft(m.expiry); return n >= 0 && n <= 30; });
-  $("n1").textContent = meds.length;
-  $("n2").textContent = soon.length;
-  $("n3").textContent = exp.length;
-  $("n4").textContent = meds.reduce((s, m) => s + (m.qty || 1), 0);
-  const attn = [...exp, ...soon];
+  return { all: ["كل الأدوية", meds], soon: ["قريبة من الانتهاء", soon], exp: ["منتهية الصلاحية", exp], qty: ["إجمالي الكميات", meds] };
+};
+function showList(k) {
+  openKind = k; const [t, a] = lists()[k];
+  $("lmTitle").textContent = t; fill("lmBody", a, "لا توجد أدوية في هذه القائمة.");
+  $("listModal").classList.remove("hide");
+}
+function closeList() { openKind = null; $("listModal").classList.add("hide"); }
+$("lmClose").onclick = closeList;
+
+function render() {
+  const L = lists(), attn = [...L.exp[1], ...L.soon[1]];
+  $("n1").textContent = meds.length; $("n2").textContent = L.soon[1].length;
+  $("n3").textContent = L.exp[1].length; $("n4").textContent = meds.reduce((s, m) => s + (m.qty || 1), 0);
   fill("lAttn", attn, "لا توجد سجلات تتطلب الانتباه حالياً.");
   fill("lAlerts", attn, "لا توجد تنبيهات حالياً.");
-  fill("lAll", meds, "لا توجد أدوية بعد. أضف أول دواء من قسم «إضافة دواء».");
-  fill("lSoon", soon, "لا توجد أدوية قريبة من الانتهاء.");
-  fill("lExp", exp, "لا توجد أدوية منتهية الصلاحية.");
-  search();
+  fill("lAll", meds, "لا توجد أدوية بعد. أضف أول دواء.");
+  fill("lSoon", L.soon[1], "لا توجد أدوية قريبة من الانتهاء.");
+  fill("lExp", L.exp[1], "لا توجد أدوية منتهية الصلاحية.");
+  search(); if (openKind) showList(openKind);
 }
 function search() {
   const q = $("q").value.trim().toLowerCase();
